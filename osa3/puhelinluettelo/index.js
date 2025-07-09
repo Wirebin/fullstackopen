@@ -1,10 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
-const cors = require('cors')
+const Person = require('./models/person')
+
 const app = express()
 
 app.use(express.static('dist'))
-app.use(cors())
 app.use(express.json())
 
 morgan.token('postbody', function(req) { 
@@ -84,24 +85,32 @@ app.post('/api/persons', (request, response) => {
 		})
 	}
 
-	const number = {
-		id: Math.floor(Math.random() * (1000000 - 1) + 1).toString(),
+	const person = new Person({
 		name: body.name,
 		number: body.number
-	}
+	})
+
+	person.save().then(savedPerson => {
+		response.json(savedPerson)
+	})
+
+	// const number = {
+	// 	id: Math.floor(Math.random() * (1000000 - 1) + 1).toString(),
+	// 	name: body.name,
+	// 	number: body.number
+	// }
 	
-	numbers = numbers.concat(number)
-	response.json(number)
+	// numbers = numbers.concat(number)
+	// response.json(number)
 })
 
 app.delete('/api/persons/:id', (request, response) => {
 	const id = request.params.id
 	numbers = numbers.filter(number => number.id !== id)
-	console.log(numbers)
 	response.status(204).end()
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`)
 })
