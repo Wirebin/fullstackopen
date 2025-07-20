@@ -17,99 +17,113 @@ app.use((request, response, next) => {
 		: morgan('tiny')(request, response, next)
 })
 
-let numbers = [
-	{
-		id: "1",
-		name: "Arto Hellas",
-		number: "040-123456"
-	},
-	{
-		id: "2",
-		name: "Ada Lovelace",
-		number: "39-44-5323523"
-	},
-	{
-		id: "3",
-		name: "Dan Abramov",
-		number: "12-43-234345"
-	},
-	{
-		id: "4",
-		name: "Mary Poppendieck",
-		number: "39-23-6423122"
-	}
-]
-
-app.get('/api/persons', (request, response) => {
-	response.json(numbers)
+app.get('/api/persons', (request, response, next) => {
+	Person.find()
+		.then(people => response.json(people))
+		.catch(err => next(err))
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
 	const id = request.params.id
-	const number = numbers.find(number => number.id === id)
 
-	if (number) {
-		response.json(number)
-	} else {
-		response.status(404).end()
-	}
+	Person.findById(id)
+		.then(person => {
+			console.log(`${person}`)
+			if (person) {
+				response.json(person)
+			} else {
+				response.status(404).end()
+			}
+		})
+		.catch(err => next(err))
 })
 
-app.get('/info', (request, response) => {
+app.get('/info', (request, response, next) => {
 	const date = new Date()
-	response.send(`
-		<p>
-			Phonebook has info for ${numbers.length} people
-		</p>
-		<p>
-			${date}
-		</p>`)
+	Person.countDocuments()
+		.then(count => {
+			response.send(`
+			<p>
+				Phonebook has info for ${count} people
+			</p>
+			<p>
+				${date}
+			</p>`)
+		})
+		.catch(err => next(err))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
 	const body = request.body
 
-	if (!body.name) {
-		return response.status(400).json({
-			error: 'name missing'
-		})
-	}
-	if (!body.number) {
-		return response.status(400).json({
-			error: 'number missing'
-		})
-	}
-	if (numbers.find(person => person.name === body.name)) {
-		return response.status(400).json({
-			error: 'name must be unique'
-		})
-	}
-
-	const person = new Person({
-		name: body.name,
-		number: body.number
-	})
-
-	person.save().then(savedPerson => {
-		response.json(savedPerson)
-	})
-
-	// const number = {
-	// 	id: Math.floor(Math.random() * (1000000 - 1) + 1).toString(),
-	// 	name: body.name,
-	// 	number: body.number
-	// }
+	Person.findOne({ name: body.name })
+		.then(person => {
+			if (person) {
+				return response.status(204).end()
+			}
 	
-	// numbers = numbers.concat(number)
-	// response.json(number)
+			const newPerson = new Person({
+				name: body.name,
+				number: body.number
+			})
+
+			newPerson.save()
+				.then(savedPerson => response.json(savedPerson))
+				.catch(err => next(err))
+		})
+		.catch(err => next(err))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.put('/api/persons/:id', (request, response, next) => {
 	const id = request.params.id
-	numbers = numbers.filter(number => number.id !== id)
-	response.status(204).end()
+	const body = request.body
+	
+	Person.findById(id)
+	.then(person => {
+		if (!person) {
+			return response.status(404).end()
+		}
+
+		person.name = body.name
+		person.number = body.number
+
+		return person.save().then((updatedPerson => {
+			response.json(updatedPerson)
+		}))
+	})
+	.catch(err => next(err))
 })
 
+app.delete('/api/persons/:id', (request, response, next) => {
+	const id = request.params.id
+
+	Person.findByIdAndDelete(id)
+		.then(() => {
+			console.log(`${id} deleted.`)
+			response.status(204).end()
+		})
+		.catch(err => next(err))
+})
+
+// Error Handling
+const errorHandler = (error, request, response, next) => {
+	console.error(`${error.message}`)
+
+	if (error.name === 'CastError') {
+		return response.status(400).send({ error: 'malformatted id' })
+	} else if (error.name === 'ValidationError') {
+		errors = {}
+		for (const err in error.errors) {
+			errors[err] = error.errors[err].message
+		}
+		return response.status(400).json({ errors })
+	}
+
+	next(error)
+}
+app.use(errorHandler)
+
+// Listening
 const PORT = process.env.PORT
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`)

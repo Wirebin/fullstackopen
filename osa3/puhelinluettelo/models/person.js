@@ -14,9 +14,22 @@ mongoose.connect(url)
 	})
 
 const personSchema = new mongoose.Schema({
-	id: String,
-	name: String,
-	number: String,
+	name: {
+		type: String,
+		minlength: 3,
+		required: true
+	},
+	number: {
+		type: String,
+		minlength: 8,
+		validate: {
+			validator: function(v) {
+				return /\d{2}-\d{6,}|\d{3}-\d{5,}/.test(v)
+			},
+			message: props => `${props.value} is not a valid phone number!`
+		},
+		required: true
+	},
 })
 
 personSchema.set('toJSON', {
@@ -28,37 +41,3 @@ personSchema.set('toJSON', {
 })
 
 module.exports = mongoose.model('Person', personSchema)
-
-// const Person = mongoose.model('Person', personSchema)
-
-// if (process.argv.length === 3) {
-// 	Person.find({})
-// 		.then(people => {
-// 			if (people.length) {
-// 				console.log('Phonebook:')
-// 				people.forEach(person => {
-// 					console.log(`${person.name} ${person.number}`)
-// 					mongoose.connection.close()
-// 				})
-// 			} else {
-// 				console.log('The phonebook is empty :(')
-// 				mongoose.connection.close()
-// 			}
-// 		})
-// }
-
-// else if (process.argv.length === 5) {
-// 	const number = new Person({
-// 		id: Math.floor(Math.random() * (1000000 - 1) + 1).toString(),
-// 		name: process.argv[3],
-// 		number: process.argv[4],
-// 	})
-
-// 	number.save()
-// 		.then(() => {
-// 			console.log(`Added ${number.name} number ${number.number} to phonebook.`)
-// 			mongoose.connection.close()
-// 		})
-// }
-
-// else { console.log("Please include name and number.") }
