@@ -38,6 +38,14 @@ beforeEach(async () => {
       password: 'password123'
     })
   userId = userResponse.body.id
+
+  await api
+    .post('/api/users')
+    .send({
+      username: 'user',
+      name: 'One Guy',
+      password: 'salainen'
+    })
   
   const loginResponse = await api
     .post('/api/login')
