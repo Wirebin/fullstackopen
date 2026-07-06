@@ -9,9 +9,9 @@ test('<AddBlogForm /> correctly calls the prop with correct information', async 
 
   render(<AddBlogForm createBlog={createBlog} />)
 
-  const titleInput = screen.getByLabelText('title:')
-  const authorInput = screen.getByLabelText('author:')
-  const UrlInput = screen.getByLabelText('url:')
+  const titleInput = screen.getByPlaceholderText('Title')
+  const authorInput = screen.getByPlaceholderText('Author')
+  const UrlInput = screen.getByPlaceholderText('Url')
   const sendButton = screen.getByText('Create')
 
   await user.type(titleInput, 'Test Title')

@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect, useInsertionEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { Card, GrayText, LikeButton, RemoveButton } from './Styles'
 
 const Blog = ({ blog, user, handleLike, handleDelete }) => {
-  const [visible, setVisible] = useState(false)
-  const [likes, setLikes] = useState(blog.likes)
+  const [likes, setLikes] = useState(0)
 
-  const toggleVisible = () => {
-    setVisible(!visible)
-  }
+  useEffect(() => {
+    if (blog) {
+      setLikes(blog.likes)
+    }
+  }, [blog])
+
+  if (!blog) return
 
   const likeBlog = async () => {
     setLikes(prev => prev + 1)
@@ -14,44 +19,46 @@ const Blog = ({ blog, user, handleLike, handleDelete }) => {
   }
 
   const blogStyle = {
-    border: 'solid',
-    borderWidth: 1,
     padding: 4,
-    margin: 6
+    margin: 4
   }
 
+  const externalUrl = blog.url.startsWith('http')
+    ? blog.url
+    : `https://${blog.url}`
+
   return (
-    <div style={blogStyle} className='blog'>
-      {!visible && (
-        <div>
-          {blog.title} | {blog.author}
-          <button style={{ marginLeft: 8 }} onClick={toggleVisible}>View</button>
-        </div>
-      )}
-      {visible && (
-        <div>
-          {blog.title} | {blog.author}
+    <Card className='blog'>
+      <h2 style={{margin: "0.5em 0"}}>
+        {blog.title}
+      </h2>
 
-          <button style={{ marginLeft: 8 }} onClick={toggleVisible}>Hide</button>
-          <br />
-          url: {blog.url} <br />
+      <GrayText>by {blog.author}</GrayText>
 
-          likes: {likes}
-          <button style={{ marginLeft: 8 }} onClick={likeBlog}>Like</button> <br />
+      <a style={{display: "block", margin: "0.8em 0"}} href={externalUrl} target='_blank' rel='noopener noreferrer'>
+        {blog.url}
+      </a>
 
-          {blog.user.name}
-          {blog.user.username === user.username && (
-            <div>
-              <button onClick={() => {
+      <GrayText>Added by {blog.user.name}</GrayText>
+
+      <div>
+        <span style={{'font-size': '1.2em', 'margin-right': '0.4em'}}>{likes} likes</span>
+        
+        {user && (
+          <>
+            <LikeButton style={{ marginLeft: 8 }} onClick={likeBlog}>Like</LikeButton>
+
+            {blog.user.username === user.username && (
+              <RemoveButton onClick={() => {
                 if (window.confirm('Do you want to delete this blog?')) {
                   handleDelete(blog.id)
                 }
-              }}>Remove</button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+              }}>Remove</RemoveButton>
+            )}
+          </>
+        )}
+      </div>
+    </Card>
   )
 }
 
