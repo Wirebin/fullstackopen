@@ -40,45 +40,69 @@ const App = () => {
     event.preventDefault()
 
     if (persons
-        .filter(person => person.name === newName)
-        .length) {
+        .filter(person => person.name.toLowerCase() === newName.toLowerCase()).length) {
           if (window.confirm(`${newName} is already added to the phonebook, replace the old number with a new one?`)) {
             personService
-              .update(persons.find(person => person.name === newName).id, personObject)
+              .update(persons.find(person => person.name.toLowerCase() === newName.toLowerCase()).id, personObject)
               .then(() => personService.getAll()
-              .then(response => setPersons(response.data)))
-              .catch(error => {
+              .then(response => {
+                setPersons(response.data)
+                setMessageType('success')
+                setMessage(`Person ${newName} has been successfully updated.`)
+                setTimeout(() => {
+                  setMessageType(null)
+                  setMessage(null)
+                }, 5000)
+                setNewName('')
+                setNewNumber('')
+                return
+              }))
+              .catch(() => {
                 setMessageType('error')
                 setMessage(`Information of ${newName} has already been removed from server.`)
                 setTimeout(() => {
                   setMessageType(null)
                   setMessage(null)
                 }, 5000)
+                setNewName('')
+                setNewNumber('')
                 return
               })
           }
-      setMessageType('success')
-      setMessage(`Person ${newName} has been successfully updated.`)
-      setTimeout(() => {
-        setMessageType(null)
-        setMessage(null)
-      }, 5000)
-      return
-    }
+        }
 
-    personService
-      .create(personObject)
-      .then(response => {
-        setPersons(persons.concat(response.data))
-        setNewName('')
-        setNewNumber('')
-      })
-    setMessageType('success')
-    setMessage(`Person ${newName} has been successfully added.`)
-    setTimeout(() => {
-      setMessageType(null)
-      setMessage(null)
-    }, 5000)
+    else {
+      personService
+        .create(personObject)
+        .then(response => {
+          setPersons(persons.concat(response.data))
+          setNewName('')
+          setNewNumber('')
+          setMessageType('success')
+          setMessage(`Person ${newName} has been successfully added.`)
+          setTimeout(() => {
+            setMessageType(null)
+            setMessage(null)
+          }, 5000)
+        })
+        .catch(err => {
+          console.log(`${err.message}`)
+          setMessageType('error')
+          if ('name' in err.response.data.errors) {
+            setMessage(`The name has to be equal to or longer than 3 characters.`)
+            setTimeout(() => {
+              setMessageType(null)
+              setMessage(null)
+            }, 5000)
+          } else if ('number' in err.response.data.errors) {
+            setMessage(`The number is not valid. It must consist of only numbers and be of format: xx-xxxxxx... or xxx-xxxxx...`)
+            setTimeout(() => {
+              setMessageType(null)
+              setMessage(null)
+            }, 5000)
+          }
+        })
+    }
   }
 
   const deletePerson = person => {
@@ -86,7 +110,7 @@ const App = () => {
       .erase(person)
       .then(() => personService.getAll()
       .then(response => setPersons(response.data)))
-      .catch(error => {
+      .catch(() => {
         setMessageType('error')
         setMessage(`Information of ${newName} has already been removed from server.`)
         setTimeout(() => {
