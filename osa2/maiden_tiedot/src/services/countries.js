@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios'
 const baseURL = 'https://studies.cs.helsinki.fi/restcountries/'
 const api_key = import.meta.env.VITE_API
 
