@@ -1,0 +1,15 @@
+{
+  "name": "bloglist-root",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run build --prefix client",
+    "start": "NODE_ENV=production npm start --prefix server",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""
+  },
+  "dependencies": {
+    "concurrently": "^10.0.3"
+  },
+  "devDependencies": {
+    "prettier": "3.9.5"
+  }
+}

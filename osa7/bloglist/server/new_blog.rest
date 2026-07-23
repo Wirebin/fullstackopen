@@ -1,0 +1,10 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+//Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImthbGxlIiwiaWQiOiI2OThmNjY3ODMwMzhiYmYyMTMwOTAwMTMiLCJpYXQiOjE3NzEwMTMwODF9.VqpiuwligRktA12azPNBiZt71TPDMPB7hnczDj6qb5g
+
+{
+    "title": "aaaa",
+    "author": "333",
+    "url": "dot.com",
+    "likes": 4
+}
